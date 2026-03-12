@@ -317,7 +317,7 @@ fun TopPlaylistScreen(
 
                         SongListItem(
                             song = song,
-                            albumIndex = index + 1,
+                            indexOverlay = index + 1,
                             isActive = song.song.id == mediaMetadata?.id,
                             isPlaying = isPlaying,
                             showInLibraryIcon = true,

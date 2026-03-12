@@ -175,6 +175,17 @@ data class SearchSummaryPage(
                 }
 
                 renderer.onTap.browseEndpoint?.isPlaylistEndpoint == true -> {
+                    val subRuns = renderer.subtitle.runs
+                    val fullSubtitle = subRuns?.joinToString { it.text } ?: return null
+                    val lastRunText = subRuns?.lastOrNull()?.text
+                    val songCountText = lastRunText.takeIf {
+                        it?.contains("song", ignoreCase = true) == true || it?.toIntOrNull() != null
+                    }
+                    val authorName = if (songCountText != null && subRuns != null && subRuns.size > 1) {
+                        subRuns.dropLast(1).joinToString { it.text }.trim(' ', '•')
+                    } else {
+                        fullSubtitle
+                    }
                     PlaylistItem(
                         id =
                             renderer.onTap.browseEndpoint.browseId
@@ -186,9 +197,9 @@ data class SearchSummaryPage(
                         author =
                             Artist(
                                 id = null,
-                                name = renderer.subtitle.runs?.joinToString { it.text } ?: return null,
+                                name = authorName,
                             ),
-                        songCountText = null,
+                        songCountText = songCountText,
                         thumbnail = renderer.thumbnail.musicThumbnailRenderer?.getThumbnailUrl() ?: return null,
                         playEndpoint =
                             renderer.buttons

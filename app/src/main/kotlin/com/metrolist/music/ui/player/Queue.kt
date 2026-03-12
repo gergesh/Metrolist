@@ -100,6 +100,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
 import androidx.navigation.NavController
+import com.metrolist.music.LocalDatabase
 import com.metrolist.music.LocalListenTogetherManager
 import com.metrolist.music.LocalPlayerConnection
 import com.metrolist.music.R
@@ -117,6 +118,7 @@ import com.metrolist.music.ui.component.BottomSheet
 import com.metrolist.music.ui.component.BottomSheetState
 import com.metrolist.music.ui.component.LocalBottomSheetPageState
 import com.metrolist.music.ui.component.LocalMenuState
+import com.metrolist.music.ui.component.Icon
 import com.metrolist.music.ui.component.MediaMetadataListItem
 import com.metrolist.music.ui.menu.PlayerMenu
 import com.metrolist.music.ui.menu.QueueMenu
@@ -829,6 +831,7 @@ fun Queue(
                             }
                         }
 
+                        val database = LocalDatabase.current
                         val content: @Composable () -> Unit = {
                             Row(
                                 horizontalArrangement = Arrangement.Center,
@@ -839,6 +842,12 @@ fun Queue(
                                     isSelected = false,
                                     isActive = isActive,
                                     isPlaying = isPlaying && isActive,
+                                    badges = {
+                                        val song by database.song(window.mediaItem.mediaId).collectAsState(initial = null)
+                                        if (song?.song?.liked == true) Icon.Favorite()
+                                        if (window.mediaItem.metadata?.explicit == true) Icon.Explicit()
+                                        if (song?.song?.inLibrary != null) Icon.Library()
+                                    },
                                     trailingContent = {
                                         if (inSelectMode) {
                                             Checkbox(

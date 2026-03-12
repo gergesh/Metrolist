@@ -162,6 +162,7 @@ import com.metrolist.music.models.PersistQueue
 import com.metrolist.music.models.toMediaMetadata
 import com.metrolist.music.playback.audio.SilenceDetectorAudioProcessor
 import com.metrolist.music.playback.queues.EmptyQueue
+import com.metrolist.music.playback.queues.PlaybackContext
 import com.metrolist.music.playback.queues.Queue
 import com.metrolist.music.playback.queues.YouTubeQueue
 import com.metrolist.music.playback.queues.filterExplicit
@@ -284,6 +285,7 @@ class MusicService :
 
     private var currentQueue: Queue = EmptyQueue
     var queueTitle: String? = null
+    private var currentPlaybackContext: PlaybackContext? = null
 
     val currentMediaMetadata = MutableStateFlow<com.metrolist.music.models.MediaMetadata?>(null)
     private val currentSong =
@@ -1360,6 +1362,7 @@ class MusicService :
 
         currentQueue = queue
         queueTitle = null
+        currentPlaybackContext = queue.getPlaybackContext()
         val persistShuffleAcrossQueues = dataStore.get(PersistentShuffleAcrossQueuesKey, false)
         val previousShuffleEnabled = player.shuffleModeEnabled
         if (!persistShuffleAcrossQueues) {
@@ -1472,6 +1475,7 @@ class MusicService :
                 }
 
                 currentQueue = radioQueue
+                currentPlaybackContext = radioQueue.getPlaybackContext()
             } catch (e: Exception) {
                 // Fallback: try with related endpoint
                 try {
@@ -3027,6 +3031,8 @@ class MusicService :
                             songId = mediaItem.mediaId,
                             timestamp = LocalDateTime.now(),
                             playTime = playbackStats.totalPlayTimeMs,
+                            contextPlaylistId = currentPlaybackContext?.playlistId,
+                            contextTitle = queueTitle,
                         ),
                     )
                 } catch (_: SQLException) {

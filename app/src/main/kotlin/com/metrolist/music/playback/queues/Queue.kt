@@ -9,6 +9,11 @@ import androidx.media3.common.MediaItem
 import com.metrolist.music.extensions.metadata
 import com.metrolist.music.models.MediaMetadata
 
+data class PlaybackContext(
+    val playlistId: String?,
+    val browseId: String? = null,
+)
+
 interface Queue {
     val preloadItem: MediaMetadata?
 
@@ -17,6 +22,8 @@ interface Queue {
     fun hasNextPage(): Boolean
 
     suspend fun nextPage(): List<MediaItem>
+
+    fun getPlaybackContext(): PlaybackContext? = null
 
     data class Status(
         val title: String?,

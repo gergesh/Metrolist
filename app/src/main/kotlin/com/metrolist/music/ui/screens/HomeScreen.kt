@@ -81,6 +81,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -320,10 +321,19 @@ fun CommunityPlaylistCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = item.playlist.author?.name ?: "",
+                        text = buildString {
+                            item.playlist.author?.name?.let { append(it) }
+                            val songCount = item.playlist.songCountText
+                                ?: item.songs.size.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.n_song, it, it) }
+                            if (songCount != null) {
+                                if (isNotEmpty()) append(" • ")
+                                append(songCount)
+                            }
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                         maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
                 }
             }

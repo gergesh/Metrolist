@@ -373,6 +373,7 @@ fun SongListItem(
     song: Song,
     modifier: Modifier = Modifier,
     albumIndex: Int? = null,
+    indexOverlay: Int? = null,
     showLikedIcon: Boolean = true,
     showInLibraryIcon: Boolean = false,
     showDownloadIcon: Boolean = true,
@@ -412,7 +413,8 @@ fun SongListItem(
             thumbnailContent = {
                 ItemThumbnail(
                     thumbnailUrl = song.song.thumbnailUrl,
-                    albumIndex = albumIndex,
+                    albumIndex = if (indexOverlay != null) null else albumIndex,
+                    indexOverlay = indexOverlay,
                     isSelected = isSelected,
                     isActive = isActive,
                     isPlaying = isPlaying,
@@ -925,6 +927,7 @@ fun MediaMetadataListItem(
     isSelected: Boolean = false,
     isActive: Boolean = false,
     isPlaying: Boolean = false,
+    badges: @Composable RowScope.() -> Unit = { if (mediaMetadata.explicit) Icon.Explicit() },
     trailingContent: @Composable RowScope.() -> Unit = {},
 ) {
     ListItem(
@@ -947,7 +950,7 @@ fun MediaMetadataListItem(
                 )
             )
         },
-        badges = { if (mediaMetadata.explicit) Icon.Explicit()},
+        badges = badges,
         thumbnailContent = {
             ItemThumbnail(
                 thumbnailUrl = mediaMetadata.thumbnailUrl,
@@ -1243,11 +1246,13 @@ fun ItemThumbnail(
     shape: Shape,
     modifier: Modifier = Modifier,
     albumIndex: Int? = null,
+    indexOverlay: Int? = null,
     isSelected: Boolean = false,
     thumbnailRatio: Float = 1f
 ) {
     val cropAlbumArt by rememberPreference(CropAlbumArtKey, false)
-    
+    val showThumbnail = albumIndex == null || indexOverlay != null
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -1255,7 +1260,7 @@ fun ItemThumbnail(
             .aspectRatio(thumbnailRatio)
             .clip(shape)
     ) {
-        if (albumIndex == null) {
+        if (showThumbnail) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(thumbnailUrl)
@@ -1271,7 +1276,7 @@ fun ItemThumbnail(
             )
         }
 
-        if (albumIndex != null) {
+        if (albumIndex != null && indexOverlay == null) {
             AnimatedVisibility(
                 visible = !isActive,
                 enter = fadeIn() + expandIn(expandFrom = Alignment.Center),
@@ -1281,6 +1286,31 @@ fun ItemThumbnail(
                     text = albumIndex.toString(),
                     style = MaterialTheme.typography.labelLarge
                 )
+            }
+        }
+
+        if (indexOverlay != null) {
+            AnimatedVisibility(
+                visible = !isActive,
+                enter = fadeIn() + expandIn(expandFrom = Alignment.Center),
+                exit = shrinkOut(shrinkTowards = Alignment.Center) + fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(4.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                            RoundedCornerShape(4.dp)
+                        )
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = indexOverlay.toString(),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
 
@@ -1303,11 +1333,11 @@ fun ItemThumbnail(
         PlayingIndicatorBox(
             isActive = isActive,
             playWhenReady = isPlaying,
-            color = if (albumIndex != null) MaterialTheme.colorScheme.onBackground else Color.White,
+            color = if (albumIndex != null && indexOverlay == null) MaterialTheme.colorScheme.onBackground else Color.White,
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    color = if (albumIndex != null)
+                    color = if (albumIndex != null && indexOverlay == null)
                         Color.Transparent
                     else
                         Color.Black.copy(alpha = ActiveBoxAlpha),

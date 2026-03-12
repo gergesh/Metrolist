@@ -29,4 +29,6 @@ data class Event(
     @ColumnInfo(index = true) val songId: String,
     val timestamp: LocalDateTime,
     val playTime: Long,
+    val contextPlaylistId: String? = null,
+    val contextTitle: String? = null,
 )

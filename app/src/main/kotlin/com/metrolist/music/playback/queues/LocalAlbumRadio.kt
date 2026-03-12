@@ -39,6 +39,9 @@ class LocalAlbumRadio(
 
     override fun hasNextPage(): Boolean = !firstTimeLoaded || continuation != null
 
+    override fun getPlaybackContext(): PlaybackContext? =
+        albumWithSongs.album.playlistId?.let { PlaybackContext(playlistId = it, browseId = null) }
+
     override suspend fun nextPage(): List<MediaItem> = withContext(IO) {
         if (!firstTimeLoaded) {
             playlistId = YouTube.album(albumWithSongs.album.id).getOrThrow().album.playlistId

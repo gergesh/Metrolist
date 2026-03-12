@@ -67,6 +67,7 @@ import com.metrolist.music.extensions.metadata
 import com.metrolist.music.extensions.toMediaItem
 import com.metrolist.music.models.toMediaMetadata
 import com.metrolist.music.playback.queues.ListQueue
+import com.metrolist.music.playback.queues.YouTubePlaylistQueue
 import com.metrolist.music.playback.queues.YouTubeQueue
 import com.metrolist.music.ui.component.ChipsRow
 import com.metrolist.music.ui.component.HideOnScrollFAB
@@ -79,6 +80,7 @@ import com.metrolist.music.ui.menu.SelectionMediaMetadataMenu
 import com.metrolist.music.ui.menu.SongMenu
 import com.metrolist.music.ui.menu.YouTubeSongMenu
 import com.metrolist.music.ui.utils.backToMain
+import com.metrolist.music.utils.makeTimeString
 import com.metrolist.music.utils.rememberPreference
 import com.metrolist.music.viewmodels.DateAgo
 import com.metrolist.music.viewmodels.HistoryViewModel
@@ -343,6 +345,9 @@ fun HistoryScreen(
                             isActive = event.song.id == mediaMetadata?.id,
                             isPlaying = isPlaying,
                             showInLibraryIcon = true,
+                            subtitleOverride = event.event.contextTitle?.let { ctxTitle ->
+                                "${event.song.artists.joinToString { it.name }} • ${makeTimeString(event.song.song.duration * 1000L)} • ${stringResource(R.string.from_context, ctxTitle)}"
+                            },
                             trailingContent = {
                                 if (inSelectMode) {
                                     Checkbox(
@@ -379,13 +384,28 @@ fun HistoryScreen(
                                             } else if (event.song.id == mediaMetadata?.id) {
                                                 playerConnection.togglePlayPause()
                                             } else {
-                                                playerConnection.playQueue(
-                                                    ListQueue(
-                                                        title = dateTitle,
-                                                        items = dateEvents.map { it.song.toMediaItem() },
-                                                        startIndex = index,
-                                                    ),
-                                                )
+                                                val ctx = event.event.contextPlaylistId
+                                                if (ctx != null) {
+                                                    playerConnection.playQueue(
+                                                        YouTubePlaylistQueue(
+                                                            playlistId = ctx,
+                                                            playlistTitle = event.event.contextTitle ?: dateTitle,
+                                                            initialSongs = emptyList(),
+                                                            initialContinuation = null,
+                                                            startIndex = 0,
+                                                            preloadItem = null,
+                                                            resumeSongId = event.song.id,
+                                                        ),
+                                                    )
+                                                } else {
+                                                    playerConnection.playQueue(
+                                                        ListQueue(
+                                                            title = dateTitle,
+                                                            items = dateEvents.map { it.song.toMediaItem() },
+                                                            startIndex = index,
+                                                        ),
+                                                    )
+                                                }
                                             }
                                         },
                                         onLongClick = {
